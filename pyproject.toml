@@ -9,7 +9,7 @@ readme = "README.md"
 requires-python = ">=3.11.0"
 dynamic = ["version"]
 dependencies = [
-  "python-powerbi",
+  "pbi_core>=0.3.7",
 ]
 
 [project.optional-dependencies]
@@ -18,6 +18,11 @@ pdf = [
   "markdown-pdf>=1.7",
 ]
 dev = ["ruff"]
+docs = [
+  "mkdocs>=1.6.1",
+  "mkdocs-material>=9.6.16",
+  "mkdocstrings-python>=0.30.0",
+]
 
 [tool.hatch.version]
 path = "pbi_git/__init__.py"
