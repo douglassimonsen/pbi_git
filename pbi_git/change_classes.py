@@ -70,6 +70,7 @@ Filter: {self.entity.get_display_name()}
 @dataclass
 class VisualChange(Change):
     filters: list[FilterChange] = field(default_factory=list)
+    data_changes: dict[str, Any] = field(default_factory=dict)
 
     def to_markdown(self) -> str:
         """Convert the visual change to a markdown string."""
@@ -88,6 +89,16 @@ class VisualChange(Change):
             for f in self.filters:
                 filter_section += f.to_markdown()
             ret += textwrap.indent(filter_section, "> ", predicate=lambda _line: True)
+            ret += "\n"
+        if self.data_changes:
+            data_section = "#### *Updated Data Queries*\n"
+            data_section += "| Section | Source | Action |\n"
+            data_section += "| ------- | ------ | ------ |\n"
+            for field, changes in self.data_changes.items():
+                for change_type in ["added", "removed"]:
+                    for item in changes.get(change_type, []):
+                        data_section += f"| {field} | {item} | {change_type.title()} |\n"
+            ret += textwrap.indent(data_section, "> ", predicate=lambda _line: True)
         return ret
 
 
