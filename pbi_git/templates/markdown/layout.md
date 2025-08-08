@@ -10,7 +10,7 @@
 
 {% for visual in section.visuals %}
 {% if visual.change_type != ChangeType.NO_CHANGE %}
-### Visual: {{ visual.entity.pbi_core_name() }}
+### Visual: {{ visual.entity.pbyx_name() }}
 
 {{ visual.to_markdown() }}
 {% endif  %}

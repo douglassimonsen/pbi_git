@@ -6,7 +6,7 @@ from .filters import filter_diff
 from .section import section_diff
 
 if TYPE_CHECKING:
-    from pbi_core.static_files.layout.layout import Layout
+    from pbyx.static_files.layout.layout import Layout
 
 
 def get_section_changes(
@@ -21,7 +21,7 @@ def get_section_changes(
             change_type=ChangeType.DELETED,
             entity=parent_sections[section_name],
             visuals=[
-                VisualChange(visual.pbi_core_id(), ChangeType.DELETED, visual)
+                VisualChange(visual.pbyx_id(), ChangeType.DELETED, visual)
                 for visual in parent_sections[section_name].visualContainers
             ],
         )
@@ -34,7 +34,7 @@ def get_section_changes(
             change_type=ChangeType.ADDED,
             entity=child_sections[section_name],
             visuals=[
-                VisualChange(visual.pbi_core_id(), ChangeType.ADDED, visual)
+                VisualChange(visual.pbyx_id(), ChangeType.ADDED, visual)
                 for visual in child_sections[section_name].visualContainers
             ],
         )

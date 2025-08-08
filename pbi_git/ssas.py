@@ -1,5 +1,5 @@
-from pbi_core.ssas.model_tables.base.base_ssas_table import SsasTable
-from pbi_core.ssas.server.tabular_model.tabular_model import LocalTabularModel
+from pbyx.ssas.model_tables.base.base_ssas_table import SsasTable
+from pbyx.ssas.server.tabular_model.tabular_model import LocalTabularModel
 
 from .change_classes import ChangeType, SsasChange
 from .utils import get_git_name

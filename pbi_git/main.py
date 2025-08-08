@@ -5,7 +5,7 @@ from .layout_diffs import layout_diff
 from .ssas import ssas_diff
 
 if TYPE_CHECKING:
-    from pbi_core.main import LocalReport
+    from pbyx.main import LocalReport
 
 
 def diff(parent: "LocalReport", child: "LocalReport") -> DiffReport:

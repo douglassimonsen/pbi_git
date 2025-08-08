@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from pbi_git.change_classes import ChangeType, FilterChange
 
 if TYPE_CHECKING:
-    from pbi_core.static_files.layout.filters import Filter
+    from pbyx.static_files.layout.filters import Filter
 
 
 def filter_update_diff(parent_filter: "Filter", child_filter: "Filter") -> FilterChange | None:

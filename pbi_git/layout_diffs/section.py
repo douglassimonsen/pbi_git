@@ -6,7 +6,7 @@ from .filters import filter_diff
 from .visual import visual_diff
 
 if TYPE_CHECKING:
-    from pbi_core.static_files.layout.layout import Section
+    from pbyx.static_files.layout.layout import Section
 
 
 def get_visual_changes(
@@ -15,8 +15,8 @@ def get_visual_changes(
 ) -> list[VisualChange]:
     visual_changes: list[VisualChange] = []
 
-    parent_visuals = {visual.pbi_core_id(): visual for visual in parent_section.visualContainers}
-    child_visuals = {visual.pbi_core_id(): visual for visual in child_section.visualContainers}
+    parent_visuals = {visual.pbyx_id(): visual for visual in parent_section.visualContainers}
+    child_visuals = {visual.pbyx_id(): visual for visual in child_section.visualContainers}
 
     visual_changes.extend(
         VisualChange(
