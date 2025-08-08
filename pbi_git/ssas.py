@@ -1,25 +1,14 @@
-from enum import Enum
-from typing import Any
-
 from pbi_core.ssas.model_tables.base.base_ssas_table import SsasTable
 from pbi_core.ssas.server.tabular_model.tabular_model import LocalTabularModel
 
 from .change_classes import ChangeType, SsasChange
+from .utils import get_git_name
 
 skip_fields: dict[str, list[str]] = {
     "columns": ["modified_time"],
     "measures": ["modified_time", "structure_modified_time"],
     "tables": ["modified_time", "system_managed"],
 }
-
-
-def get_enum_name(val: Any) -> str | None:
-    """Get the name of an enum value."""
-    if isinstance(val, Enum):
-        return val.name
-    if val is not None:
-        return str(val)
-    return None
 
 
 def compare_fields(
@@ -35,7 +24,7 @@ def compare_fields(
     }
     if not field_changes:
         return None
-    field_changes = {k: (get_enum_name(v[0]), get_enum_name(v[1])) for k, v in field_changes.items()}
+    field_changes = {k: (get_git_name(v[0]), get_git_name(v[1])) for k, v in field_changes.items()}
 
     return SsasChange(
         entity_type=ssas_category,

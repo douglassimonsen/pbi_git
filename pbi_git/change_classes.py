@@ -6,16 +6,7 @@ from typing import Any
 
 import jinja2
 
-
-def get_enum_name(val: Any) -> str | None:
-    """Get the name of an enum value."""
-    if isinstance(val, Enum):
-        return val.name
-    if isinstance(val, float):
-        return str(round(val, 3))
-    if val is not None:
-        return str(val)
-    return None
+from .utils import get_git_name
 
 
 def name_formatter(name: str) -> str:
@@ -28,12 +19,12 @@ FIELD_CHANGES_TABLE = jinja2.Template("""
 | ----- | ---- | -- |
 {% for field, (from_val, to_val) in changes.items() -%}
 | {{name_formatter(field)}} | <code>{{ from_val or "*No Value*" }}</code> | <code>{{ to_val or "*No Value*" }}</code> |
-{% endfor %}                                                                     
+{% endfor %}
 """)
 
 
 def get_field_changes_table(changes: dict[str, tuple[Any, Any]]) -> str:
-    parsed_data = {k: [get_enum_name(a), get_enum_name(b)] for k, (a, b) in changes.items()}
+    parsed_data = {k: (get_git_name(a), get_git_name(b)) for k, (a, b) in changes.items()}
     return FIELD_CHANGES_TABLE.render(
         changes=parsed_data,
         name_formatter=name_formatter,
@@ -60,7 +51,7 @@ class FilterChange(Change):
     def to_markdown(self) -> str:
         if self.change_type == ChangeType.NO_CHANGE:
             return ""
-        if self.change_type in (ChangeType.ADDED, ChangeType.DELETED):
+        if self.change_type in {ChangeType.ADDED, ChangeType.DELETED}:
             return f"""
 Filter: {self.entity.get_display_name()}
 
@@ -84,7 +75,7 @@ class VisualChange(Change):
         """Convert the visual change to a markdown string."""
         if self.change_type == ChangeType.NO_CHANGE:
             return ""
-        if self.change_type in (ChangeType.ADDED, ChangeType.DELETED):
+        if self.change_type in {ChangeType.ADDED, ChangeType.DELETED}:
             return f"**Visual {self.change_type.value.title()}**"
 
         ret = ""
@@ -96,7 +87,7 @@ class VisualChange(Change):
 
             for f in self.filters:
                 filter_section += f.to_markdown()
-            ret += textwrap.indent(filter_section, "> ", predicate=lambda line: True)
+            ret += textwrap.indent(filter_section, "> ", predicate=lambda _line: True)
         return ret
 
 
@@ -109,7 +100,7 @@ class SectionChange(Change):
         """Convert the section change to a markdown string."""
         if self.change_type == ChangeType.NO_CHANGE:
             return ""
-        if self.change_type in (ChangeType.ADDED, ChangeType.DELETED):
+        if self.change_type in {ChangeType.ADDED, ChangeType.DELETED}:
             return f"**Section {self.change_type.value.title()}**"
 
         ret = ""
@@ -121,7 +112,7 @@ class SectionChange(Change):
 
             for f in self.filters:
                 filter_section += f.to_markdown()
-            ret += textwrap.indent(filter_section, "> ", predicate=lambda line: True)
+            ret += textwrap.indent(filter_section, "> ", predicate=lambda _line: True)
 
         return ret
 
@@ -143,7 +134,7 @@ class LayoutChange(Change):
 
             for f in self.filters:
                 filter_section += f.to_markdown()
-            ret += textwrap.indent(filter_section, "> ", predicate=lambda line: True)
+            ret += textwrap.indent(filter_section, "> ", predicate=lambda _line: True)
 
         return ret
 
@@ -160,7 +151,7 @@ class DiffReport:
 
     def to_markdown(self) -> str:
         """Convert the diff report to a markdown string."""
-        from .to_markdown import to_markdown
+        from .to_markdown import to_markdown  # noqa: PLC0415
 
         return to_markdown(self)
 
@@ -181,7 +172,7 @@ class DiffReport:
             markdown_pdf doesn't handle temporary files well, that's why we save directly to a file path.
 
         """
-        from markdown_pdf import MarkdownPdf, Section
+        from markdown_pdf import MarkdownPdf, Section  # noqa: PLC0415
 
         # mode gfm-like requires linkify-it-py
         css = (Path(__file__).parent / "templates" / "github-dark.css").read_text()

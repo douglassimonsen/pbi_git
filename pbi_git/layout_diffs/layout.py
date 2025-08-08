@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from pbi_core.git.change_classes import ChangeType, LayoutChange, SectionChange, VisualChange
+from pbi_git.change_classes import ChangeType, LayoutChange, SectionChange, VisualChange
 
 from .filters import filter_diff
 from .section import section_diff

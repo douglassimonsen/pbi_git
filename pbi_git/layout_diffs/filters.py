@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from pbi_core.git.change_classes import ChangeType, FilterChange
+from pbi_git.change_classes import ChangeType, FilterChange
 
 if TYPE_CHECKING:
     from pbi_core.static_files.layout.filters import Filter
