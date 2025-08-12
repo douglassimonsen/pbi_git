@@ -11,6 +11,8 @@
 Read the [documentation](https://douglassimonsen.github.io/pbi_git/) for more information.
 
 
+`pbi_git` is a package for generating markdown documentation for changes Power BI files, making report evolution easier to track.
+
 # Dev Instructions
 
 
