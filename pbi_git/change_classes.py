@@ -110,6 +110,7 @@ class VisualChange(Change):
 class SectionChange(Change):
     filters: list[FilterChange] = field(default_factory=list)
     visuals: list[VisualChange] = field(default_factory=list)
+    image_paths: dict[str, str] = field(default_factory=dict)
 
     def to_markdown(self) -> str:
         """Convert the section change to a markdown string."""
@@ -119,6 +120,11 @@ class SectionChange(Change):
             return f"**Section {self.change_type.value.title()}**"
 
         ret = ""
+        if self.image_paths:
+            ret += f"""| Before | After |
+| ------ | ----- |
+| <img src="{self.image_paths["old"]}" width="100%"> | <img src="{self.image_paths["new"]}" width="100%"> |
+"""
         if self.field_changes:
             ret += get_field_changes_table(self.field_changes)
 

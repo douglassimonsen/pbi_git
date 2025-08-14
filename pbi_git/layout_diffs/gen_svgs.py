@@ -39,7 +39,7 @@ def conv_name(x: str) -> str:
     return x.lower().replace(" ", "_")
 
 
-def gen_svgs(section: "Section", changed_ids: set[str], suffix: Literal["old", "new"]) -> None:
+def gen_svgs(section: "Section", changed_ids: set[str], suffix: Literal["old", "new"]) -> str:
     assert section._layout is not None
 
     update_layer = "_deleted" if suffix == "old" else "_added"
@@ -73,3 +73,4 @@ def gen_svgs(section: "Section", changed_ids: set[str], suffix: Literal["old", "
         )
 
     drawing.save()
+    return f_name
