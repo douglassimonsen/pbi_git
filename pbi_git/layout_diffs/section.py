@@ -66,8 +66,12 @@ def section_diff(parent: "Section", child: "Section") -> SectionChange:
     change_type = ChangeType.UPDATED if has_changed else ChangeType.NO_CHANGE
 
     if visual_changes:
-        gen_svgs(parent)
-
+        deleted_ids = {x.entity.name() for x in visual_changes if x.change_type == ChangeType.DELETED}
+        added_ids = {x.entity.name() for x in visual_changes if x.change_type == ChangeType.ADDED}
+        deleted_ids = {x for x in deleted_ids if x is not None}
+        added_ids = {x for x in added_ids if x is not None}
+        deleted_elements = gen_svgs(parent, deleted_ids, "old")
+        added_elements = gen_svgs(child, added_ids, "new")
     return SectionChange(
         id=parent.name,
         change_type=change_type,

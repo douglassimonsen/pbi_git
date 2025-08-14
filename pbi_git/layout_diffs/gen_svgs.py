@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 from xml.etree import ElementTree as ET  # noqa: S405
 
 import svgwrite
@@ -20,7 +20,7 @@ VISUAL_MAPPER = {
 
 
 class Raw:
-    elementname: str = "svg"
+    elementname: str = "rect"  # needed to pass validation
 
     def __init__(self, text: str, width: float, height: float) -> None:
         self.text = text
@@ -39,16 +39,14 @@ def conv_name(x: str) -> str:
     return x.lower().replace(" ", "_")
 
 
-def embed_image(drawing: svgwrite.Drawing, svg_content: str) -> None:
-    drawing.add()
-
-
-def gen_svgs(section: "Section") -> None:
+def gen_svgs(section: "Section", changed_ids: set[str], suffix: Literal["old", "new"]) -> None:
     assert section._layout is not None
 
-    name = conv_name(section.name)
-    name_index = [conv_name(s.name) for s in section._layout.sections].index(name)
-    f_name = f"{name}.svg" if name_index == 0 else f"{name}_{name_index + 1}.svg"
+    update_layer = "_deleted" if suffix == "old" else "_added"
+
+    name = conv_name(section.displayName)
+    name_index = [conv_name(s.displayName) for s in section._layout.sections].index(name)
+    f_name = f"{name}_{suffix}.svg" if name_index == 0 else f"{name}_{name_index + 1}_{suffix}.svg"
 
     drawing = svgwrite.Drawing(f_name, profile="tiny", viewBox=f"0 0 {section.width} {section.height}")
 
@@ -58,8 +56,9 @@ def gen_svgs(section: "Section") -> None:
             if viz_type in VISUAL_MAPPER:
                 g = drawing.g()
                 g.translate(visual.x, visual.y)
-                e = Raw(SVGS[VISUAL_MAPPER[viz_type]], visual.width, visual.height)
-                g.add(e)
+                g.add(Raw(SVGS[VISUAL_MAPPER[viz_type]], visual.width, visual.height))
+                if visual.name() in changed_ids:
+                    g.add(Raw(SVGS[update_layer], visual.width, visual.height))
                 drawing.add(g)
                 continue
 
@@ -72,6 +71,5 @@ def gen_svgs(section: "Section") -> None:
                 stroke_width=1,
             ),
         )
+
     drawing.save()
-    print("hi")
-    exit()

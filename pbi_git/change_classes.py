@@ -2,11 +2,14 @@ import textwrap
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import jinja2
 
 from .utils import get_git_name
+
+if TYPE_CHECKING:
+    from pbi_core.static_files.layout.visual_container import VisualContainer
 
 
 def name_formatter(name: str) -> str:
@@ -69,6 +72,7 @@ Filter: {self.entity.get_display_name()}
 
 @dataclass
 class VisualChange(Change):
+    entity: "VisualContainer"
     filters: list[FilterChange] = field(default_factory=list)
     data_changes: dict[str, Any] = field(default_factory=dict)
 
