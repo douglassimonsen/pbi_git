@@ -47,7 +47,6 @@ def get_section_changes(
         sub_section_changes = section_diff(parent_section, child_section)
         if sub_section_changes:
             section_changes.append(sub_section_changes)
-
     return section_changes
 
 

@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from pbi_git.change_classes import ChangeType, SectionChange, VisualChange
 
 from .filters import filter_diff
+from .gen_svgs import gen_svgs
 from .visual import visual_diff
 
 if TYPE_CHECKING:
@@ -63,6 +64,9 @@ def section_diff(parent: "Section", child: "Section") -> SectionChange:
 
     has_changed = visual_changes or filter_changes or field_changes
     change_type = ChangeType.UPDATED if has_changed else ChangeType.NO_CHANGE
+
+    if visual_changes:
+        gen_svgs(parent)
 
     return SectionChange(
         id=parent.name,
