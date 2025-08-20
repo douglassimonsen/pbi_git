@@ -49,6 +49,7 @@ class _SectionDirectory(TypedDict):
 class DirectoryDict(TypedDict):
     main: str
     ssas: str
+    layout_changes: str
     layout: dict["StrPath", _SectionDirectory]
 
 
@@ -62,13 +63,19 @@ def to_markdown_dir(diff_report: "DiffReport") -> DirectoryDict:
         tables_without_changes=tables_without_changes,
         name_formatter=name_formatter,
     )
-    layout = DIR_TEMPLATES["layout"].render(
+    layout_changes = DIR_TEMPLATES["layout"].render(
         layout_changes=diff_report.layout_changes,
         ChangeType=ChangeType,
     )
-    main = DIR_TEMPLATES["main"].render(summary=summary, ssas=ssas, layout=layout)
-    return {
-        "main": main,
-        "ssas": ssas,
-        "layout": {},
-    }
+
+    layout = {}
+    for section in diff_report.layout_changes.sections:
+        layout[section.entity.displayName] = {
+            "main": section.to_markdown(),
+            "visuals": {
+                visual.entity.pbi_core_name(): visual.to_markdown()
+                for visual in section.visuals
+                if visual.change_type != ChangeType.NO_CHANGE
+            },
+        }
+    return {"main": summary, "ssas": ssas, "layout_changes": layout_changes, "layout": layout}

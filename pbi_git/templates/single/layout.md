@@ -13,7 +13,7 @@
 ### Visual: {{ visual.entity.pbi_core_name() }}
 
 {{ visual.to_markdown() }}
-{% endif  %}
+{% endif %}
 {% endfor %}
 {% endif %}
 {% endfor %}

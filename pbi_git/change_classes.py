@@ -187,6 +187,14 @@ class DiffReport:
         root.mkdir(parents=True, exist_ok=True)
         (root / "main.md").write_text(data["main"])
         (root / "ssas.md").write_text(data["ssas"])
+        (root / "layout.md").write_text(data["layout_changes"])
+        for s_name, s_data in data["layout"].items():
+            s_dir = root / s_name
+            s_dir.mkdir(parents=True, exist_ok=True)
+            (s_dir / "visuals").mkdir(parents=True, exist_ok=True)
+            (s_dir / "main.md").write_text(s_data["main"])
+            for v_name, v_data in s_data["visuals"].items():
+                (s_dir / "visuals" / f"{v_name}.md").write_text(v_data)
 
     def to_pdf(self, file_path: str) -> None:
         def add_ids(line: str) -> str:
