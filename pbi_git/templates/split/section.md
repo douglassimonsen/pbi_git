@@ -10,8 +10,8 @@
 
 | Visual Element | Change Type |
 | -------------- | ----------- |
-{% for visual in section.visuals %}
-{% if visual.change_type != ChangeType.NO_CHANGE %}
+{% for visual in section.visuals -%}
+{% if visual.change_type != ChangeType.NO_CHANGE -%}
 | [{{ visual.display_name() }}](visuals/{{ visual.path_name() }}.md) | {{ visual.change_count() }} |
-{% endif %}
+{% endif -%}
 {% endfor %}

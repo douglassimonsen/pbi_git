@@ -71,9 +71,9 @@ def to_markdown_dir(diff_report: "DiffReport") -> DirectoryDict:
     layout = {}
     for section in diff_report.layout_changes.sections:
         layout[section.path_name()] = {
-            "main": section.to_markdown(),
+            "main": DIR_TEMPLATES["section"].render(section=section, ChangeType=ChangeType),
             "visuals": {
-                visual.path_name(): visual.to_markdown()
+                visual.path_name(): DIR_TEMPLATES["visual"].render(visual=visual, ChangeType=ChangeType)
                 for visual in section.visuals
                 if visual.change_type != ChangeType.NO_CHANGE
             },
