@@ -43,6 +43,7 @@ def to_markdown(diff_report: "DiffReport") -> str:
 
 class _SectionDirectory(TypedDict):
     main: str
+    images: dict[str, str]
     visuals: dict["StrPath", str]
 
 
@@ -77,5 +78,6 @@ def to_markdown_dir(diff_report: "DiffReport") -> DirectoryDict:
                 for visual in section.visuals
                 if visual.change_type != ChangeType.NO_CHANGE
             },
+            "images": section.image_paths,
         }
     return {"main": summary, "ssas": ssas, "layout_changes": layout_changes, "layout": layout}

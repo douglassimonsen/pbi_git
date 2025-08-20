@@ -133,9 +133,9 @@ class SectionChange(Change):
 
         ret = ""
         if self.image_paths:
-            ret += f"""| Before | After |
+            ret += """| Before | After |
 | ------ | ----- |
-| <img src="{self.image_paths["old"]}" width="100%"> | <img src="{self.image_paths["new"]}" width="100%"> |
+| <img src="old.svg" width="100%"> | <img src="new.svg" width="100%"> |
 """
         if self.field_changes:
             ret += get_field_changes_table(self.field_changes)
@@ -213,6 +213,9 @@ class DiffReport:
             s_dir.mkdir(parents=True, exist_ok=True)
             (s_dir / "visuals").mkdir(parents=True, exist_ok=True)
             (s_dir / "main.md").write_text(s_data["main"])
+            if s_data["images"]:
+                for img_name, img_data in s_data["images"].items():
+                    (s_dir / f"{img_name}.svg").write_text(img_data)
             for v_name, v_data in s_data["visuals"].items():
                 (s_dir / "visuals" / f"{v_name}.md").write_text(v_data)
 

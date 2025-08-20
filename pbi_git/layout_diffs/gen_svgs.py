@@ -44,11 +44,12 @@ def gen_svgs(section: "Section", changed_ids: set[str], suffix: Literal["old", "
 
     update_layer = "_deleted" if suffix == "old" else "_added"
 
-    name = conv_name(section.displayName)
-    name_index = [conv_name(s.displayName) for s in section._layout.sections].index(name)
-    f_name = f"{name}_{suffix}.svg" if name_index == 0 else f"{name}_{name_index + 1}_{suffix}.svg"
-
-    drawing = svgwrite.Drawing(f_name, profile="tiny", viewBox=f"0 0 {section.width} {section.height}")
+    svg_path = (Path(__file__).parent / "test.svg").absolute()
+    drawing = svgwrite.Drawing(
+        svg_path.absolute().as_posix().replace("\\", "/"),
+        profile="tiny",
+        viewBox=f"0 0 {section.width} {section.height}",
+    )
 
     for visual in section.visualContainers:
         if visual.config.singleVisual is not None:
@@ -73,4 +74,7 @@ def gen_svgs(section: "Section", changed_ids: set[str], suffix: Literal["old", "
         )
 
     drawing.save()
-    return f_name
+
+    data = svg_path.read_text(encoding="utf-8")
+    svg_path.unlink()
+    return data
