@@ -1,3 +1,4 @@
+import datetime
 import textwrap
 from dataclasses import dataclass, field
 from enum import Enum
@@ -9,6 +10,7 @@ import jinja2
 from .utils import get_git_name
 
 if TYPE_CHECKING:
+    from _typeshed import StrPath
     from pbi_core.static_files.layout.visual_container import VisualContainer
 
 
@@ -175,6 +177,16 @@ class DiffReport:
         from .to_markdown import to_markdown  # noqa: PLC0415
 
         return to_markdown(self)
+
+    def to_dir(self, path: "StrPath") -> None:
+        from .to_markdown import to_markdown_dir  # noqa: PLC0415
+
+        data = to_markdown_dir(self)
+        now = datetime.datetime.now(tz=datetime.UTC).strftime("%Y_%m_%d %H_%M_%S")
+        root = Path(path) / now
+        root.mkdir(parents=True, exist_ok=True)
+        (root / "main.md").write_text(data["main"])
+        (root / "ssas.md").write_text(data["ssas"])
 
     def to_pdf(self, file_path: str) -> None:
         def add_ids(line: str) -> str:

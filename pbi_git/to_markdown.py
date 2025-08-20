@@ -1,16 +1,21 @@
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 import jinja2
 
 from .change_classes import ChangeType
 
 if TYPE_CHECKING:
+    from _typeshed import StrPath
+
     from pbi_git.change_classes import DiffReport
 
 
-TEMPLATES = {
-    p.stem: jinja2.Template(p.read_text()) for p in (Path(__file__).parent / "templates" / "markdown").iterdir()
+SINGLE_TEMPLATES = {
+    p.stem: jinja2.Template(p.read_text()) for p in (Path(__file__).parent / "templates" / "single").iterdir()
+}
+DIR_TEMPLATES = {
+    p.stem: jinja2.Template(p.read_text()) for p in (Path(__file__).parent / "templates" / "split").iterdir()
 }
 
 
@@ -20,17 +25,50 @@ def name_formatter(name: str) -> str:
 
 
 def to_markdown(diff_report: "DiffReport") -> str:
-    summary = TEMPLATES["summary"].render(diff_report=diff_report)
+    summary = SINGLE_TEMPLATES["summary"].render(diff_report=diff_report)
     tables_without_changes = ", ".join(table for table, changes in diff_report.ssas_changes.items() if not changes)
     tables_with_changes = {table: changes for table, changes in diff_report.ssas_changes.items() if changes}
-    ssas = TEMPLATES["ssas"].render(
+    ssas = SINGLE_TEMPLATES["ssas"].render(
         ssas_changes=diff_report.ssas_changes,
         tables_with_changes=tables_with_changes,
         tables_without_changes=tables_without_changes,
         name_formatter=name_formatter,
     )
-    layout = TEMPLATES["layout"].render(
+    layout = SINGLE_TEMPLATES["layout"].render(
         layout_changes=diff_report.layout_changes,
         ChangeType=ChangeType,
     )
-    return TEMPLATES["main"].render(summary=summary, ssas=ssas, layout=layout)
+    return SINGLE_TEMPLATES["main"].render(summary=summary, ssas=ssas, layout=layout)
+
+
+class _SectionDirectory(TypedDict):
+    main: str
+    visuals: dict["StrPath", str]
+
+
+class DirectoryDict(TypedDict):
+    main: str
+    ssas: str
+    layout: dict["StrPath", _SectionDirectory]
+
+
+def to_markdown_dir(diff_report: "DiffReport") -> DirectoryDict:
+    summary = DIR_TEMPLATES["summary"].render(diff_report=diff_report)
+    tables_without_changes = ", ".join(table for table, changes in diff_report.ssas_changes.items() if not changes)
+    tables_with_changes = {table: changes for table, changes in diff_report.ssas_changes.items() if changes}
+    ssas = DIR_TEMPLATES["ssas"].render(
+        ssas_changes=diff_report.ssas_changes,
+        tables_with_changes=tables_with_changes,
+        tables_without_changes=tables_without_changes,
+        name_formatter=name_formatter,
+    )
+    layout = DIR_TEMPLATES["layout"].render(
+        layout_changes=diff_report.layout_changes,
+        ChangeType=ChangeType,
+    )
+    main = DIR_TEMPLATES["main"].render(summary=summary, ssas=ssas, layout=layout)
+    return {
+        "main": main,
+        "ssas": ssas,
+        "layout": {},
+    }
