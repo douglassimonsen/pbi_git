@@ -16,7 +16,11 @@ def compare_fields(
     parent_entity: SsasTable,
     child_entity: SsasTable,
 ) -> SsasChange | None:
-    fields = set(parent_entity.model_fields.keys()) - {"tabular_model", "id"} - set(skip_fields.get(ssas_category, []))
+    fields = (
+        set(parent_entity.__pydantic_fields__.keys())
+        - {"tabular_model", "id"}
+        - set(skip_fields.get(ssas_category, []))
+    )
     field_changes = {
         field_name: (getattr(parent_entity, field_name), getattr(child_entity, field_name))
         for field_name in fields
@@ -67,5 +71,4 @@ def ssas_diff(parent_ssas: LocalTabularModel, child_ssas: LocalTabularModel) -> 
                 category_changes.append(field_changes)
 
         ret[ssas_category] = category_changes
-
     return ret

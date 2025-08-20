@@ -107,6 +107,16 @@ class VisualChange(Change):
             ret += textwrap.indent(data_section, "> ", predicate=lambda _line: True)
         return ret
 
+    def change_count(self) -> int:
+        return len(self.field_changes) + len(self.filters) + len(self.data_changes)
+
+    def display_name(self) -> str:
+        return self.entity.pbi_core_name()
+
+    def path_name(self) -> str:
+        base = f"{self.display_name()}_{self.entity.pbi_core_id()}"
+        return base.lower().replace(" ", "_").replace(".", "_")
+
 
 @dataclass
 class SectionChange(Change):
@@ -138,6 +148,16 @@ class SectionChange(Change):
             ret += textwrap.indent(filter_section, "> ", predicate=lambda _line: True)
 
         return ret
+
+    def change_count(self) -> int:
+        return len(self.field_changes) + len(self.filters) + sum(v.change_count() for v in self.visuals)
+
+    def display_name(self) -> str:
+        return self.entity.displayName
+
+    def path_name(self) -> str:
+        base = f"{self.display_name()}_{self.entity.name}"
+        return base.lower().replace(" ", "_").replace(".", "_")
 
 
 @dataclass
@@ -230,7 +250,7 @@ class DiffReport:
 
     def section_updates(self) -> int:
         """Count the number of section updates."""
-        return sum(len(section.field_changes) + len(section.filters) for section in self.layout_changes.sections)
+        return sum(section.change_count() for section in self.layout_changes.sections)
 
     def visual_updates(self) -> int:
         """Count the number of visual updates."""
