@@ -32,12 +32,22 @@ def compare_prototype_queries(
     return ret
 
 
+# These fields can change by <1px often by opening and resaving, so we only show changes above a threshold
+NOISY_VISUAL_CHANGES = ["height", "width", "x", "y"]
+NOISY_DIFF = 2
+
+
 def visual_diff(parent_visual: "VisualContainer", child_visual: "VisualContainer") -> VisualChange:
     field_changes = {}
-    for k in ["x", "y", "z", "width", "height", "tabOrder"]:
+    for k in [*NOISY_VISUAL_CHANGES, "z", "tabOrder"]:
         parent_val = getattr(parent_visual, k, None)
         child_val = getattr(child_visual, k, None)
-        if parent_val != child_val and not (parent_val is None and child_val is None):
+        if parent_val is None and child_val is None:
+            continue
+        if k in NOISY_VISUAL_CHANGES:
+            if abs((child_val or 0) - (parent_val or 0)) > NOISY_DIFF:
+                field_changes[k] = (parent_val, child_val)
+        elif parent_val != child_val:
             field_changes[k] = (parent_val, child_val)
 
     data_changes = compare_prototype_queries(parent_visual.config.singleVisual, child_visual.config.singleVisual)

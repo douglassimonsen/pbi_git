@@ -67,13 +67,20 @@ def section_diff(parent: "Section", child: "Section") -> SectionChange:
 
     image_paths = {}
     if visual_changes:
-        deleted_ids = {x.entity.name() for x in visual_changes if x.change_type == ChangeType.DELETED}
-        added_ids = {x.entity.name() for x in visual_changes if x.change_type == ChangeType.ADDED}
+        deleted_ids = {x.entity.pbi_core_id() for x in visual_changes if x.change_type == ChangeType.DELETED}
+        added_ids = {x.entity.pbi_core_id() for x in visual_changes if x.change_type == ChangeType.ADDED}
+        moved_ids = {
+            x.entity.pbi_core_id()
+            for x in visual_changes
+            if x.change_type == ChangeType.UPDATED
+            and any(field in x.field_changes for field in ("x", "y", "width", "height"))
+        }
         deleted_ids = {x for x in deleted_ids if x is not None}
         added_ids = {x for x in added_ids if x is not None}
+        moved_ids = {x for x in moved_ids if x is not None}
 
-        old_image_path = gen_svgs(parent, deleted_ids, "old")
-        new_image_path = gen_svgs(child, added_ids, "new")
+        old_image_path = gen_svgs(parent, deleted=deleted_ids)
+        new_image_path = gen_svgs(child, added=added_ids, moved=moved_ids)
         image_paths["old"] = old_image_path
         image_paths["new"] = new_image_path
 
@@ -84,5 +91,5 @@ def section_diff(parent: "Section", child: "Section") -> SectionChange:
         filters=filter_changes,  # type: ignore reportArgumentType
         visuals=visual_changes,
         field_changes=field_changes,
-        image_paths=image_paths
+        image_paths=image_paths,
     )
