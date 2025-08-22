@@ -1,3 +1,4 @@
+import contextlib
 import datetime
 import textwrap
 from dataclasses import dataclass, field
@@ -63,7 +64,7 @@ class FilterChange(Change):
             return ""
         if self.change_type in {ChangeType.ADDED, ChangeType.DELETED}:
             return f"""
-Filter: {self.parent_entity.get_display_name()}
+Filter: {self.primary_entity().get_display_name()}
 
 **Filter {self.change_type.value.title()}**
 """
@@ -71,10 +72,13 @@ Filter: {self.parent_entity.get_display_name()}
         filter_change_table = get_field_changes_table(self.field_changes)
         return f"""
 
-Filter: {self.parent_entity.get_display_name()}
+Filter: {self.primary_entity().get_display_name()}
 
 {filter_change_table}
 """
+
+    def primary_entity(self) -> Any:
+        return self.parent_entity or self.child_entity
 
 
 @dataclass
@@ -85,33 +89,44 @@ class VisualChange(Change):
     data_changes: dict[str, Any] = field(default_factory=dict)
     performance_comparison: dict[str, "Performance"] = field(default_factory=dict)
 
+    def _generate_performance_section(self) -> str:
+        if not self.performance_comparison:
+            return ""
+
+        ret = ""
+        if self.performance_comparison.get("parent") is None:
+            child_duration = round(self.performance_comparison["child"].total_duration / 1000, 2)
+            ret += f"Render Time: N/A -> {child_duration}s"
+        elif self.performance_comparison.get("child") is None:
+            parent_duration = round(self.performance_comparison["parent"].total_duration / 1000, 2)
+            ret += f"Render Time: {parent_duration}s -> N/A"
+        else:
+            child_duration = round(self.performance_comparison["child"].total_duration / 1000, 2)
+            parent_duration = round(self.performance_comparison["parent"].total_duration / 1000, 2)
+
+            change = round((child_duration - parent_duration) / parent_duration * 100, 2)
+
+            color = "grey"
+            if change < 0:
+                color = "green"
+            elif change > 0:
+                color = "red"
+
+            change_text = f"<span style='color: {color}'>{change}%</span>"
+
+            ret += f"Render Time: {parent_duration}s -> {child_duration}s ({change_text})\n"
+        return ret
+
     def to_markdown(self) -> str:
         """Convert the visual change to a markdown string."""
         if self.change_type == ChangeType.NO_CHANGE:
             return ""
         if self.change_type in {ChangeType.ADDED, ChangeType.DELETED}:
-            return f"**Visual {self.change_type.value.title()}**"
+            return f"**Visual {self.change_type.value.title()}**\n{self._generate_performance_section()}"
 
-        ret = ""
+        ret = f"{self._generate_performance_section()}\n"
         if self.field_changes:
             ret += get_field_changes_table(self.field_changes)
-
-        if self.performance_comparison:
-            if self.performance_comparison.get("parent") is None:
-                child_duration = self.performance_comparison["child"].total_duration / 1000
-                ret += f"Render Time --- -> {child_duration:2f}s"
-            elif self.performance_comparison.get("child") is None:
-                parent_duration = self.performance_comparison["parent"].total_duration / 1000
-                ret += f"Render Time {parent_duration:2f}s -> ---"
-            else:
-                child_duration = self.performance_comparison["child"].total_duration / 1000
-                parent_duration = self.performance_comparison["parent"].total_duration / 1000
-
-                change = (child_duration - parent_duration) / parent_duration * 100
-                color = "green" if change < 0 else "red"
-                change_text = f"<span style='color: {color}'>{change:.2f}%</span>"
-
-                ret += f"Render Time {parent_duration:2f}s -> {child_duration:2f}s ({change_text})\n"
 
         if self.filters:
             filter_section = "#### *Updated Filters*\n"
@@ -148,15 +163,11 @@ class VisualChange(Change):
 
     def add_performance_comparison(self, parent_ssas: "LocalTabularModel", child_ssas: "LocalTabularModel") -> None:
         if self.parent_entity:
-            try:
+            with contextlib.suppress(NoQueryError):
                 self.performance_comparison["parent"] = self.parent_entity.get_performance(parent_ssas)
-            except NoQueryError:
-                pass
         if self.child_entity:
-            try:
+            with contextlib.suppress(NoQueryError):
                 self.performance_comparison["child"] = self.child_entity.get_performance(child_ssas)
-            except NoQueryError:
-                pass
 
 
 @dataclass
