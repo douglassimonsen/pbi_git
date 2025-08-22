@@ -28,7 +28,8 @@ def filter_update_diff(parent_filter: "Filter", child_filter: "Filter") -> Filte
         return FilterChange(
             id=parent_filter.name,
             change_type=ChangeType.UPDATED,
-            entity=parent_filter,
+            parent_entity=parent_filter,
+            child_entity=child_filter,
             field_changes=field_changes,
         )
     return None
@@ -41,7 +42,8 @@ def filter_diff(parent_filters: "list[Filter]", child_filters: "list[Filter]") -
         FilterChange(
             id=filter_name,
             change_type=ChangeType.DELETED,
-            entity=parent_filter_dict[filter_name],
+            parent_entity=parent_filter_dict[filter_name],
+            child_entity=None,
         )
         for filter_name in set(parent_filter_dict.keys()) - set(child_filter_dict.keys())
     ]
@@ -49,7 +51,8 @@ def filter_diff(parent_filters: "list[Filter]", child_filters: "list[Filter]") -
         FilterChange(
             id=filter_name,
             change_type=ChangeType.ADDED,
-            entity=child_filter_dict[filter_name],
+            parent_entity=None,
+            child_entity=child_filter_dict[filter_name],
         )
         for filter_name in set(child_filter_dict.keys()) - set(parent_filter_dict.keys())
     )

@@ -19,9 +19,15 @@ def get_section_changes(
         SectionChange(
             id=section_name,
             change_type=ChangeType.DELETED,
-            entity=parent_sections[section_name],
+            parent_entity=parent_sections[section_name],
+            child_entity=None,
             visuals=[
-                VisualChange(visual.pbi_core_id(), ChangeType.DELETED, visual)
+                VisualChange(
+                    id=visual.pbi_core_id(),
+                    change_type=ChangeType.DELETED,
+                    parent_entity=visual,
+                    child_entity=None,
+                )
                 for visual in parent_sections[section_name].visualContainers
             ],
         )
@@ -32,9 +38,15 @@ def get_section_changes(
         SectionChange(
             id=section_name,
             change_type=ChangeType.ADDED,
-            entity=child_sections[section_name],
+            parent_entity=None,
+            child_entity=child_sections[section_name],
             visuals=[
-                VisualChange(visual.pbi_core_id(), ChangeType.ADDED, visual)
+                VisualChange(
+                    id=visual.pbi_core_id(),
+                    change_type=ChangeType.ADDED,
+                    parent_entity=None,
+                    child_entity=visual,
+                )
                 for visual in child_sections[section_name].visualContainers
             ],
         )
@@ -67,7 +79,8 @@ def layout_diff(parent: "Layout", child: "Layout") -> LayoutChange:
     return LayoutChange(
         id="layout",
         change_type=change_type,
-        entity=parent,
+        parent_entity=parent,
+        child_entity=child,
         field_changes=field_changes,
         filters=filter_changes,
         sections=section_changes,

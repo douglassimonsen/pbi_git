@@ -23,7 +23,8 @@ def get_visual_changes(
         VisualChange(
             id=visual_id,
             change_type=ChangeType.DELETED,
-            entity=parent_visuals[visual_id],
+            parent_entity=parent_visuals[visual_id],
+            child_entity=None,
         )
         for visual_id in set(parent_visuals.keys()) - set(child_visuals.keys())
     )
@@ -31,7 +32,8 @@ def get_visual_changes(
         VisualChange(
             id=visual_id,
             change_type=ChangeType.ADDED,
-            entity=child_visuals[visual_id],
+            parent_entity=None,
+            child_entity=child_visuals[visual_id],
         )
         for visual_id in set(child_visuals.keys()) - set(parent_visuals.keys())
     )
@@ -67,10 +69,10 @@ def section_diff(parent: "Section", child: "Section") -> SectionChange:
 
     image_paths = {}
     if visual_changes:
-        deleted_ids = {x.entity.pbi_core_id() for x in visual_changes if x.change_type == ChangeType.DELETED}
-        added_ids = {x.entity.pbi_core_id() for x in visual_changes if x.change_type == ChangeType.ADDED}
+        deleted_ids = {x.primary_entity().pbi_core_id() for x in visual_changes if x.change_type == ChangeType.DELETED}
+        added_ids = {x.primary_entity().pbi_core_id() for x in visual_changes if x.change_type == ChangeType.ADDED}
         moved_ids = {
-            x.entity.pbi_core_id()
+            x.primary_entity().pbi_core_id()
             for x in visual_changes
             if x.change_type == ChangeType.UPDATED
             and any(field in x.field_changes for field in ("x", "y", "width", "height"))
@@ -87,7 +89,8 @@ def section_diff(parent: "Section", child: "Section") -> SectionChange:
     return SectionChange(
         id=parent.name,
         change_type=change_type,
-        entity=parent,
+        parent_entity=parent,
+        child_entity=child,
         filters=filter_changes,  # type: ignore reportArgumentType
         visuals=visual_changes,
         field_changes=field_changes,

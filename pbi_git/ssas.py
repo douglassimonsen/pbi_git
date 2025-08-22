@@ -32,7 +32,8 @@ def compare_fields(
 
     return SsasChange(
         entity_type=ssas_category,
-        entity=parent_entity,
+        parent_entity=parent_entity,
+        child_entity=child_entity,
         id=str(parent_entity.id),
         change_type=ChangeType.UPDATED,
         field_changes=field_changes,
@@ -50,7 +51,8 @@ def ssas_diff(parent_ssas: LocalTabularModel, child_ssas: LocalTabularModel) -> 
                 id=entity_id,
                 change_type=ChangeType.DELETED,
                 entity_type=ssas_category,
-                entity=parent_entities[entity_id],
+                parent_entity=parent_entities[entity_id],
+                child_entity=None,
             )
             for entity_id in set(parent_entities.keys()) - set(child_entities.keys())
         ]
@@ -59,7 +61,8 @@ def ssas_diff(parent_ssas: LocalTabularModel, child_ssas: LocalTabularModel) -> 
                 id=entity_id,
                 change_type=ChangeType.ADDED,
                 entity_type=ssas_category,
-                entity=child_entities[entity_id],
+                parent_entity=None,
+                child_entity=child_entities[entity_id],
             )
             for entity_id in set(child_entities.keys()) - set(parent_entities.keys())
         )

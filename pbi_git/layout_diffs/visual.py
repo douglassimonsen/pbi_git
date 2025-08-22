@@ -57,7 +57,8 @@ def visual_diff(parent_visual: "VisualContainer", child_visual: "VisualContainer
 
     return VisualChange(
         id=parent_visual.pbi_core_id(),
-        entity=parent_visual,
+        parent_entity=parent_visual,
+        child_entity=child_visual,
         change_type=change_type,
         field_changes=field_changes,
         filters=filter_changes,

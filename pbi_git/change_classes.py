@@ -6,11 +6,15 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import jinja2
+from pbi_core.static_files.layout.performance import NoQueryError
 
 from .utils import get_git_name
 
 if TYPE_CHECKING:
     from _typeshed import StrPath
+    from pbi_core.ssas.server import LocalTabularModel
+    from pbi_core.static_files.layout.layout import Section
+    from pbi_core.static_files.layout.performance import Performance
     from pbi_core.static_files.layout.visual_container import VisualContainer
 
 
@@ -47,7 +51,8 @@ class ChangeType(Enum):
 class Change:
     id: str
     change_type: ChangeType
-    entity: Any  # The entity itself, e.g., a table or measure object
+    parent_entity: Any  # The entity itself, e.g., a table or measure object in the elder report
+    child_entity: Any  # The entity itself, e.g., a table or measure object in the younger report
     field_changes: dict[str, tuple[Any, Any]] = field(default_factory=dict)  # field name to [old_value, new_value]
 
 
@@ -58,7 +63,7 @@ class FilterChange(Change):
             return ""
         if self.change_type in {ChangeType.ADDED, ChangeType.DELETED}:
             return f"""
-Filter: {self.entity.get_display_name()}
+Filter: {self.parent_entity.get_display_name()}
 
 **Filter {self.change_type.value.title()}**
 """
@@ -66,7 +71,7 @@ Filter: {self.entity.get_display_name()}
         filter_change_table = get_field_changes_table(self.field_changes)
         return f"""
 
-Filter: {self.entity.get_display_name()}
+Filter: {self.parent_entity.get_display_name()}
 
 {filter_change_table}
 """
@@ -74,9 +79,11 @@ Filter: {self.entity.get_display_name()}
 
 @dataclass
 class VisualChange(Change):
-    entity: "VisualContainer"
+    parent_entity: "VisualContainer | None"
+    child_entity: "VisualContainer | None"
     filters: list[FilterChange] = field(default_factory=list)
     data_changes: dict[str, Any] = field(default_factory=dict)
+    performance_comparison: dict[str, "Performance"] = field(default_factory=dict)
 
     def to_markdown(self) -> str:
         """Convert the visual change to a markdown string."""
@@ -88,6 +95,23 @@ class VisualChange(Change):
         ret = ""
         if self.field_changes:
             ret += get_field_changes_table(self.field_changes)
+
+        if self.performance_comparison:
+            if self.performance_comparison.get("parent") is None:
+                child_duration = self.performance_comparison["child"].total_duration / 1000
+                ret += f"Render Time --- -> {child_duration:2f}s"
+            elif self.performance_comparison.get("child") is None:
+                parent_duration = self.performance_comparison["parent"].total_duration / 1000
+                ret += f"Render Time {parent_duration:2f}s -> ---"
+            else:
+                child_duration = self.performance_comparison["child"].total_duration / 1000
+                parent_duration = self.performance_comparison["parent"].total_duration / 1000
+
+                change = (child_duration - parent_duration) / parent_duration * 100
+                color = "green" if change < 0 else "red"
+                change_text = f"<span style='color: {color}'>{change:.2f}%</span>"
+
+                ret += f"Render Time {parent_duration:2f}s -> {child_duration:2f}s ({change_text})\n"
 
         if self.filters:
             filter_section = "#### *Updated Filters*\n"
@@ -107,19 +131,38 @@ class VisualChange(Change):
             ret += textwrap.indent(data_section, "> ", predicate=lambda _line: True)
         return ret
 
+    def primary_entity(self) -> "VisualContainer":
+        ret = self.parent_entity or self.child_entity
+        assert ret is not None
+        return ret
+
     def change_count(self) -> int:
         return len(self.field_changes) + len(self.filters) + len(self.data_changes)
 
     def display_name(self) -> str:
-        return self.entity.pbi_core_name()
+        return self.primary_entity().pbi_core_name()
 
     def path_name(self) -> str:
-        base = f"{self.display_name()}_{self.entity.pbi_core_id()}"
+        base = f"{self.display_name()}_{self.primary_entity().pbi_core_id()}"
         return base.lower().replace(" ", "_").replace(".", "_")
+
+    def add_performance_comparison(self, parent_ssas: "LocalTabularModel", child_ssas: "LocalTabularModel") -> None:
+        if self.parent_entity:
+            try:
+                self.performance_comparison["parent"] = self.parent_entity.get_performance(parent_ssas)
+            except NoQueryError:
+                pass
+        if self.child_entity:
+            try:
+                self.performance_comparison["child"] = self.child_entity.get_performance(child_ssas)
+            except NoQueryError:
+                pass
 
 
 @dataclass
 class SectionChange(Change):
+    parent_entity: "Section | None"
+    child_entity: "Section | None"
     filters: list[FilterChange] = field(default_factory=list)
     visuals: list[VisualChange] = field(default_factory=list)
     image_paths: dict[str, str] = field(default_factory=dict)
@@ -152,11 +195,16 @@ class SectionChange(Change):
     def change_count(self) -> int:
         return len(self.field_changes) + len(self.filters) + sum(v.change_count() for v in self.visuals)
 
+    def primary_entity(self) -> "Section":
+        ret = self.parent_entity or self.child_entity
+        assert ret is not None
+        return ret
+
     def display_name(self) -> str:
-        return self.entity.displayName
+        return self.primary_entity().displayName
 
     def path_name(self) -> str:
-        base = f"{self.display_name()}_{self.entity.name}"
+        base = f"{self.display_name()}_{self.primary_entity().name}"
         return base.lower().replace(" ", "_").replace(".", "_")
 
 
