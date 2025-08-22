@@ -13,7 +13,7 @@ from .utils import get_git_name
 
 if TYPE_CHECKING:
     from _typeshed import StrPath
-    from pbi_core.ssas.server import LocalTabularModel
+    from pbi_core.ssas.server import BaseTabularModel
     from pbi_core.static_files.layout.layout import Section
     from pbi_core.static_files.layout.performance import Performance
     from pbi_core.static_files.layout.visual_container import VisualContainer
@@ -104,7 +104,7 @@ class VisualChange(Change):
             child_duration = round(self.performance_comparison["child"].total_duration / 1000, 2)
             parent_duration = round(self.performance_comparison["parent"].total_duration / 1000, 2)
 
-            change = round((child_duration - parent_duration) / parent_duration * 100, 2)
+            change = round((child_duration - parent_duration) / max(parent_duration, 0.01) * 100, 2)
 
             color = "grey"
             if change < 0:
@@ -161,7 +161,7 @@ class VisualChange(Change):
         base = f"{self.display_name()}_{self.primary_entity().pbi_core_id()}"
         return base.lower().replace(" ", "_").replace(".", "_")
 
-    def add_performance_comparison(self, parent_ssas: "LocalTabularModel", child_ssas: "LocalTabularModel") -> None:
+    def add_performance_comparison(self, parent_ssas: "BaseTabularModel", child_ssas: "BaseTabularModel") -> None:
         if self.parent_entity:
             with contextlib.suppress(NoQueryError):
                 self.performance_comparison["parent"] = self.parent_entity.get_performance(parent_ssas)

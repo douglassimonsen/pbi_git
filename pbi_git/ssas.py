@@ -1,5 +1,5 @@
 from pbi_core.ssas.model_tables.base.base_ssas_table import SsasTable
-from pbi_core.ssas.server.tabular_model.tabular_model import LocalTabularModel
+from pbi_core.ssas.server.tabular_model.tabular_model import BaseTabularModel
 
 from .change_classes import ChangeType, SsasChange
 from .utils import get_git_name
@@ -40,7 +40,7 @@ def compare_fields(
     )
 
 
-def ssas_diff(parent_ssas: LocalTabularModel, child_ssas: LocalTabularModel) -> dict[str, list[SsasChange]]:
+def ssas_diff(parent_ssas: BaseTabularModel, child_ssas: BaseTabularModel) -> dict[str, list[SsasChange]]:
     ret: dict[str, list[SsasChange]] = {}
     parent_ssas.annotations[0]
     for ssas_category in parent_ssas.TABULAR_FIELDS():
