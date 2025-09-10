@@ -24,7 +24,9 @@ docs = [
   "mkdocs-material>=9.6.16",
   "mkdocstrings-python>=0.30.0",
 ]
-
+[project.urls]
+Homepage = "https://github.com/douglassimonsen/pbi_git"
+Documentation = "https://douglassimonsen.github.io/pbi_git/"
 [tool.hatch.version]
 path = "pbi_git/__init__.py"
 
